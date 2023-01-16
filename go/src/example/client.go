@@ -1,37 +1,86 @@
 package main
 
 import (
-	"encoding/gob"
-	"fmt"
-	"net"
+    //"fmt"
+    "io/ioutil"
+    "os"
+    "net"
+)
+
+const (
+	HOST = "localhost"
+	PORT = "8888"
+	TYPE = "tcp"
 )
 
 func main() {
-	// Se connecter au serveur
-	conn, err := net.Dial("tcp", "localhost:8080") //net.Dial permet d'établir la connection au serveur, ses arguments son le type de protocole et l'adresse utilisés, elle renvoie deux inforfations conn (pour les donées échangées) et err pour les erreures
-	if err != nil {                                //renvoi l'erreur si il y en a une
-		panic(err)
-	}
-	defer conn.Close() //ferme la connection
 
-	// Créer un tableau à envoyer
-	arr := []int{1, 2, 3, 4, 5}
+        //PARTIE LECTURE FICHIER//    
 
-	// Encode l'array en utlisant la méthode gob et l'envoie
-	encoder := gob.NewEncoder(conn)
-	err = encoder.Encode(arr)
-	if err != nil {
-		panic(err)
-	}
+        //Lecture de MatriceA
+        file1, err := os.Open("MatriceA")
+        if err != nil {
+                panic(err)
+        }
+        defer file1.Close()
 
-	// Recevoir le tableau inversé
-	var reversedArr []int
-	decoder := gob.NewDecoder(conn)
-	err = decoder.Decode(&reversedArr)
-	if err != nil {
-		panic(err)
-	}
+        //Lecture de MatriceB
+        file2, err := os.Open("MatriceB")
+        if err != nil {
+                panic(err)
+        }
+        defer file2.Close()
 
-	// Afficher le tableau inversé
-	fmt.Println("Tableau inversé : ", reversedArr)
+        // Read the file into a byte slice
+        matriceA, err := ioutil.ReadAll(file1)
+        if err != nil {
+                panic(err)
+        }
+
+        // Print the contents of the file
+        //fmt.Println(string(matriceA))
+
+        // Read the file into a byte slice
+        matriceB, err := ioutil.ReadAll(file2)
+        if err != nil {
+                panic(err)
+        }
+
+        // Print the contents of the file
+        //fmt.Println(string(matriceB))
+
+        matrices := string(matriceA) + string(matriceB)
+
+        //PARTIE ENVOI AU SERVEUR//
+
+        tcpServer, err := net.ResolveTCPAddr(TYPE, HOST+":"+PORT)
+        if err != nil {
+                println("ResolveTCPAddr failed:", err.Error())
+                os.Exit(1)
+        }
+
+        conn, err := net.DialTCP(TYPE, nil, tcpServer) //nil represente l'adresse locale
+        if err != nil {
+                println("Dial failed:", err.Error())
+                os.Exit(1)
+        }
+
+        _, err = conn.Write([]byte(matrices))
+        if err != nil {
+                println("Write matriceA failed:", err.Error())
+                os.Exit(1)
+        }
+
+        // buffer to get matriceA
+        received := make([]byte, 1024)
+        _, err = conn.Read(received)
+        if err != nil {
+                println("Read matriceA failed:", err.Error())
+                os.Exit(1)
+        }
+
+        println("Received message:", string(received))
+
+        conn.Close()
+
 }
