@@ -49,7 +49,7 @@ func main() {
         // Print the contents of the file
         //fmt.Println(string(matriceB))
 
-        matrices := string(matriceA) + string(matriceB)
+        matrices := string(matriceA) + "/////" + string(matriceB)
 
         //PARTIE ENVOI AU SERVEUR//
 

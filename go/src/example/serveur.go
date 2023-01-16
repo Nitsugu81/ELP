@@ -5,6 +5,8 @@ import (
     "net"
     //"time"
     "strings"
+    "sync"
+    "reflect"
 )
 
 func main() {
@@ -29,26 +31,74 @@ func main() {
             panic(err)
         }
         go func(conn net.Conn) {
-            var i int = 0
-            fmt.Print("\ni: ", i, "\n")
             buf := make([]byte, 1024)
-            len, err := conn.Read(buf)
-            fmt.Print("Nombre de bit :", len, "\n")
+            taille, err := conn.Read(buf)
+            fmt.Print("Nombre de bit :", taille, "\n")
             if err != nil {
                 fmt.Printf("Error reading: %#v\n", err)
                 return
             }
-            matrices := string(buf[:len])
-            matrices_slices := strings.Split(matrices," ")
-            fmt.Printf("Message received: \n%s\n", matrices_slices)
-            for i, v := range matrices_slices {
-                fmt.Println("\nIndex : ", i, "Valeur : ", v)
+            matrices := string(buf[:taille])
+            matrices_slices := strings.Split(matrices,"/////")
+            matriceA := matrices_slices[0]
+            //matriceB := matrices_slices[1]
+            var matrice1 [2][2] int
+            //matrice2 := [][]int
+
+            fmt.Print(reflect.TypeOf(matriceA))
+            fmt.Printf("LA MATRICEA EST EGAL A : %s\n", matriceA)
+            k := 0
+            j := 0
+
+            for i := 0; i < len(matriceA); i++ { //ATTENTION, UN STRING C EST UNE CHAINE DE BYTE ET NON PAS UNE CHAINE DE CHARACTERES
+                fmt.Print("\nBLAAAAAAAAAAA :" + string(rune(matriceA[i])))
+                if string(matriceA[i]) == " "{
+                    continue
+                }
+                if string(matriceA[i]) == "\n"{
+                    k++
+                    j=0
+                }else{
+                    matrice1[k][j] = int(matriceA[i])
+                    j++
+                }
             }
+            fmt.Println()
+
+            for i := range matrice1 {
+                for j := range matrice1[i] {
+                    fmt.Printf("%d ",matrice1[i][j])
+                }
+                fmt.Println()
+            }
+
             
 
+            /*lignes_matriceA := strings.Split(matriceA,"\n")
+            lignes_matriceB := strings.Split(matriceB,"\n")
+            for i,v := range lignes_matriceA{
+                fmt.Println("\nIndex : ", i, "Valeur : ", v)
+            }
+            for i,v := range lignes_matriceB{
+                fmt.Println("\nIndex : ", i, "Valeur : ", v)
+            }
+            colonnes_matriceB = []int
+
+            for i, v := range matrices_slices {
+                fmt.Println("\nIndex : ", i, "Valeur : ", v)
+            }*/
+            
             conn.Write([]byte("Message received.\n"))
             conn.Close()
-            i++
         }(conn)
+    }
+}
+
+func multiply(a [][]int, b [][]int, result [][]int, row int, wg *sync.WaitGroup) {
+    defer wg.Done()
+    for col := 0; col < len(b[0]); col++ {
+        for k := 0; k < len(a[0]); k++ {
+            result[row][col] += a[row][k] * b[k][col]
+        }
     }
 }
