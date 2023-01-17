@@ -7,6 +7,7 @@ import (
     "strings"
     "sync"
     "reflect"
+    //"strconv"
 )
 
 func main() {
@@ -42,35 +43,40 @@ func main() {
             matrices_slices := strings.Split(matrices,"/////")
             matriceA := matrices_slices[0]
             //matriceB := matrices_slices[1]
-            var matrice1 [2][2] int
+            //var matrice1 [2][2] int
             //matrice2 := [][]int
 
             fmt.Print(reflect.TypeOf(matriceA))
             fmt.Printf("LA MATRICEA EST EGAL A : %s\n", matriceA)
             k := 0
             j := 0
-
-            for i := 0; i < len(matriceA); i++ { //ATTENTION, UN STRING C EST UNE CHAINE DE BYTE ET NON PAS UNE CHAINE DE CHARACTERES
-                fmt.Print("\nBLAAAAAAAAAAA :" + string(rune(matriceA[i])))
-                if string(matriceA[i]) == " "{
+            matriceA_lignes := strings.Split(matriceA,"\n")
+            fmt.Print("POOP : ", len((((matriceA_lignes[1])))))
+            for i := 0; i < len(matriceA_lignes); i++ { //ATTENTION, UN STRING C EST UNE CHAINE DE BYTE ET NON PAS UNE CHAINE DE CHARACTERES (Histoire avec rune)
+                //fmt.Print("\nBLAAAAAAAAAAA :" + string((matriceA[i])))
+                matriceA_elems := strings.Split(matriceA_lignes[i], " ")
+                for j := 0; j < len(matriceA_elems); j++{
+                    
+                }
+                if string(matriceA_lignes[i]) == " "{  // A enlever cette ligne eventuellement
                     continue
                 }
-                if string(matriceA[i]) == "\n"{
+                if string(matriceA_lignes[i]) == "\n"{
                     k++
                     j=0
                 }else{
-                    matrice1[k][j] = int(matriceA[i])
-                    j++
+                    //matrice1[k][j],_ = strconv.Atoi((string(matriceA_lignes[i])))
+                    j++ 
                 }
             }
             fmt.Println()
 
-            for i := range matrice1 {
+            /*for i := range matrice1 {
                 for j := range matrice1[i] {
                     fmt.Printf("%d ",matrice1[i][j])
                 }
                 fmt.Println()
-            }
+            }*/
 
             
 
