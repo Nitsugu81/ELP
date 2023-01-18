@@ -7,6 +7,7 @@ import (
     "sync"
     "reflect"
     "strconv"
+    "encoding/json"
 )
 
 func main() {
@@ -131,10 +132,15 @@ func main() {
                 go multiply(matrice1, matrice2, &matriceR, i, &wg)
             }
             wg.Wait()
-        
-            fmt.Println(matriceR)
+
+            matrice_encodee, err := json.Marshal(matriceR)
+            if err != nil {
+                panic(err)
+            }
+            fmt.Print("matrice encodee : ", matrice_encodee)
+            fmt.Println(" de type : ", reflect.TypeOf(matrice_encodee))
             
-            conn.Write([]byte("Message received.\n"))
+            conn.Write([]byte(matrice_encodee))
             conn.Close()
         }(conn)
     }
