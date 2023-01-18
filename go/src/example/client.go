@@ -3,12 +3,14 @@ package main
 import (
     //"fmt"
     "io/ioutil"
+    "io"
     "os"
     "net"
     //"reflect"
     "encoding/json"
     "fmt"
     "reflect"
+
 )
 
 const (
@@ -76,7 +78,16 @@ func main() {
         }
 
         // Chopper la matriceR
-        received := make([]byte, 1024)
+
+        received, err := ioutil.ReadAll(conn)
+	if err != nil {
+		if err != io.EOF {
+			fmt.Println("read error:", err)
+		}
+		panic(err)
+	}
+
+        /*received := make([]byte, 1024)
         n, err := conn.Read(received)
         if err != nil {
                 println("Read matriceR failed:", err.Error())
@@ -87,7 +98,7 @@ func main() {
             matriceR[i] = make([]int, 2)
         }*/
         var matriceR [][]int64         
-        json.Unmarshal(received[:n], &matriceR)
+        json.Unmarshal(received, &matriceR)
 
         fmt.Println("Type : ", reflect.TypeOf(received))
         println(received, "donne : ", string(received))

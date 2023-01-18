@@ -8,6 +8,8 @@ import (
     "reflect"
     "strconv"
     "encoding/json"
+    "bytes"
+    "io"
 )
 
 func main() {
@@ -32,19 +34,41 @@ func main() {
             panic(err)
         }
         go func(conn net.Conn) {
+            /*
             buf := make([]byte, 1024)
             taille, err := conn.Read(buf)
             fmt.Print("Nombre de bit :", taille, "\n")
             if err != nil {
                 fmt.Printf("Error reading: %#v\n", err)
                 return
+            }*/
+
+            buf := bytes.NewBuffer(nil)
+            delimiter := []byte("...")
+            for {
+                tmp := make([]byte, 256) //De petite taille pour pas trop lire (en gros on lit 256 bytes par 256 bytes et on rajoute ca dans un buffer, comme ca ca evite de faire un buffer trop gros ou trop petit)
+                n, err := conn.Read(tmp)
+                if err != nil {
+                    if err == io.EOF {
+                        break
+                    }
+                    fmt.Printf("Error reading: %#v\n", err)
+                    return
+                }
+                buf.Write(tmp[:n])
+                if bytes.Contains(buf.Bytes(), delimiter) {
+                    break
+                }
             }
-            matrices := string(buf[:taille])
+            matrices := buf.String()
+
+            //matrices := string(buf[:taille])
             matrices_slices := strings.Split(matrices,"/////")
             matriceA := matrices_slices[0]
             matriceB := matrices_slices[1]
             matriceA_lignes := strings.Split(matriceA,"\n")
             matriceB_lignes := strings.Split(matriceB,"\n")
+            matriceB_lignes = matriceB_lignes[:len(matriceB_lignes)-1]
 
             nb_lignes_matrice1 := (len(matriceA_lignes))
             nb_lignes_matrice2 := (len(matriceB_lignes))
