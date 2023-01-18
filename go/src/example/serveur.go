@@ -46,24 +46,30 @@ func main() {
             matriceB_lignes := strings.Split(matriceB,"\n")
 
             nb_lignes_matrice1 := (len(matriceA_lignes))
-            //nb_lignes_matrice2 := (len(matriceB_lignes))
-            //nb_colonnes_matrice1 := (len(strings.Split(matriceA_lignes[0], " ")))
-            //nb_colonnes_matrice2  := (len(strings.Split(matriceB_lignes, " ")))
+            nb_lignes_matrice2 := (len(matriceB_lignes))
+            nb_colonnes_matrice1 := (len(strings.Split(matriceA_lignes[0], " ")))
+            nb_colonnes_matrice2  := (len(strings.Split(matriceB_lignes[0], " ")))
 
             fmt.Print("nb_lignes : ", nb_lignes_matrice1)
             fmt.Println(" de type : ", reflect.TypeOf(nb_lignes_matrice1))
-            tata := 2
-            matrice1 := make([][]int, tata)
-            for i := 0; i < tata; i++ {
-                matrice1[i] = make([]int, tata)
+            //tata := 2
+            matrice1 := make([][]int, nb_lignes_matrice1)
+            for i := 0; i < nb_lignes_matrice1; i++ {
+                matrice1[i] = make([]int, nb_colonnes_matrice1)
             } //On pouvait pas passer par des arrays parce que la taille est pas constante (depend des matrices envoyées) donc ca ne marchait pas
-            matrice2 := make([][]int, tata)
-            for i := 0; i < tata; i++ {
-                matrice2[i] = make([]int, tata)
+            matrice2 := make([][]int, nb_lignes_matrice2)
+            for i := 0; i < nb_lignes_matrice2; i++ {
+                matrice2[i] = make([]int, nb_colonnes_matrice2)
             }
-            matriceR := make([][]int, tata)
-            for i := 0; i < tata; i++ {
-                matriceR[i] = make([]int, tata)
+            matriceR := make([][]int, nb_lignes_matrice1)
+            for i := 0; i < nb_lignes_matrice1; i++ {
+                matriceR[i] = make([]int, nb_colonnes_matrice2)
+            }
+
+            if nb_colonnes_matrice1 != nb_lignes_matrice2{
+                conn.Write([]byte("Il faut autant de colonnes pour la matriceA que de lignes pour la matriceB\n"))
+                conn.Close()
+                return 
             }
 
             //fmt.Print(reflect.TypeOf(matriceA))
@@ -80,10 +86,10 @@ func main() {
                     
             }*/
 
-            for i := 0; i < 2; i++ { //ATTENTION, UN STRING C EST UNE CHAINE DE BYTE ET NON PAS UNE CHAINE DE CHARACTERES (Histoire avec rune)
+            for i := 0; i < nb_lignes_matrice1; i++ { //ATTENTION, UN STRING C EST UNE CHAINE DE BYTE ET NON PAS UNE CHAINE DE CHARACTERES (Histoire avec rune)
                 //fmt.Print("\nBLAAAAAAAAAAA :" + string((matriceA[i])))
                 matriceA_elems := strings.Split(matriceA_lignes[i], " ")
-                for j := 0; j < 2; j++{
+                for j := 0; j < nb_colonnes_matrice1; j++{
                     matrice1[i][j],err = strconv.Atoi((string(matriceA_elems[j])))
                     if err != nil {
                         fmt.Print("ERREUR")
@@ -103,10 +109,10 @@ func main() {
             
             fmt.Println("Matrice B : ")
 
-            for i := 0; i < len(matriceB_lignes); i++ { //ATTENTION, UN STRING C EST UNE CHAINE DE BYTE ET NON PAS UNE CHAINE DE CHARACTERES (Histoire avec rune)
+            for i := 0; i < nb_lignes_matrice2; i++ { //ATTENTION, UN STRING C EST UNE CHAINE DE BYTE ET NON PAS UNE CHAINE DE CHARACTERES (Histoire avec rune)
                 //fmt.Print("\nBLAAAAAAAAAAA :" + string((matriceA[i])))
                 matriceB_elems := strings.Split(matriceB_lignes[i], " ")
-                for j := 0; j < len(matriceB_elems); j++{
+                for j := 0; j < nb_colonnes_matrice2; j++{
                     matrice2[i][j],_ = strconv.Atoi((string(matriceB_elems[j])))
                 }
                     
