@@ -73,7 +73,6 @@ view model =
     [ h2 [] [ text "Word Definitions" ]
     , viewWord model
     , input [ type_ "text", onInput CheckWord] []
-    , viewWordMatch model
     ]
 
 
@@ -108,20 +107,6 @@ viewDefinition : Definition -> Html Msg
 viewDefinition def =
     li [] [ text def.definition ]
 
-viewWordMatch : Model -> Html Msg
-viewWordMatch model =
-  case model of
-    Success words ->
-        case words of
-            word::_ ->
-                case (word.word == enteredWord) of
-                    True -> text "You found the word!"
-                    False -> text "Pute"
-            _ -> text ""
-    _ -> text ""
-
-enteredWord : String
-enteredWord = ""
 
 -- HTTP
 
