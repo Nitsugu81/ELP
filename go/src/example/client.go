@@ -1,17 +1,13 @@
 package main
 
 import (
-    //"fmt"
     "io/ioutil"
     "io"
     "os"
     "net"
-    //"reflect"
-    "encoding/json"
     "fmt"
-    "reflect"
-    "bytes"
     "strings"
+    "bufio"
 
 )
 
@@ -73,90 +69,66 @@ func main() {
                 os.Exit(1)
         }
 
-        _, err = conn.Write([]byte(matrices))
+        writer := bufio.NewWriter(conn) // Utilisation de bufio pour pouvoir utiliser flush
+        _, err = writer.Write([]byte(matrices))
         if err != nil {
-                println("Write matriceA failed:", err.Error())
+                println("Write matrices failed:", err.Error())
                 os.Exit(1)
         }
+        writer.Flush() //Permet d'envoyer les données directement sans avoir à attendre que le buffer se remplisse ou qu'il s'envoie après un timeout. 
 
-        // Chopper la matriceR
+        //PARTIE RECEP DES DONNEES ENVOYEES PAR LE SERVEUR
 
-        /*received, err := ioutil.ReadAll(conn)
-	if err != nil {
-		if err != io.EOF {
-			fmt.Println("read error:", err)
-		}
-		panic(err)
-	}*/
-
-        received := bytes.NewBuffer(nil)
-        delimiter := []byte("...")
-        for {
-                tmp := make([]byte, 256) //De petite taille pour pas trop lire (en gros on lit 256 bytes par 256 bytes et on rajoute ca dans un buffer, comme ca ca evite de faire un buffer trop gros ou trop petit)
-                n, err := conn.Read(tmp)
-                if err != nil {
-                    if err == io.EOF {
-                        break
-                    }
-                    fmt.Printf("Error reading: %#v\n", err)
-                    return
-                }
-                received.Write(tmp[:n])
-                if bytes.Contains(received.Bytes(), delimiter) {
-                    break
-                }
-        }
-
-        fmt.Print(received.String())
-        fmt.Println(" de type : ", reflect.TypeOf(received.String()))
-        new := strings.Split(received.String(),"...")
-        fmt.Print(" new : ", new)
-        fmt.Println(" de longueur : ", len(new))
-
-        /*received := make([]byte, 1024)
-        n, err := conn.Read(received)
+        reader := bufio.NewReader(conn)
         if err != nil {
-                println("Read matriceR failed:", err.Error())
-                os.Exit(1)
+                panic(err)
         }
-        /*matriceR := make([][]int, 3)
-        for i := 0; i < 3; i++ {
-            matriceR[i] = make([]int, 2)
-        }*/
-        var matriceR [][]int64         
-        json.Unmarshal(received.Bytes(), &matriceR)
-
-        fmt.Println("Type : ", reflect.TypeOf(received))
-        println(received, "donne : ", (received.String()))
-        fmt.Print("MatriceR : ", matriceR)
-        fmt.Print(" de type : ", reflect.TypeOf(matriceR))
-
-        //Mettre la réponse dans un fichier text
-
         file, err := os.Create("matriceR")
         if err != nil {
                 panic(err)
         }
         defer file.Close()
-
-        // Write the matrix contents to the file
-        for i := range matriceR {
-                for j := range matriceR[i] {
-                _, err := file.WriteString(fmt.Sprintf("%d ", matriceR[i][j]))
+        for {
+                line, err := reader.ReadString('\n')
+                if strings.Contains(line, "..."){
+                        break
+                }
+                fmt.Print(line)
+                if err != nil {
+                        if err == io.EOF {
+                                break
+                        }
+                        panic(err)
+                }
+                _, err = file.WriteString(line)
                 if err != nil {
                         panic(err)
                 }
+
+        }
+        //var matriceR [][]int64         
+ 
+        //Mettre la réponse dans un fichier text
+
+        /*file, err := os.Create("matriceR")
+        if err != nil {
+                panic(err)
+        }
+        defer file.Close()*/
+
+        // Write the matrix contents to the file
+        /*for i := range matriceR {
+                for j := range matriceR[i] {
+                        _, err := file.WriteString(fmt.Sprintf("%d ", matriceR[i][j]))
+                        if err != nil {
+                                panic(err)
+                        }
                 }
                 _, err := file.WriteString("\n")
                 if err != nil {
                 panic(err)
                 }
-        }
-
-
-        conn.Close()
+        }*/
 }
-
-
 // Utiliser flush à la fin de chaque envoie pour pas que tcp attente
-// Utiliser ReadString (ou Readlines ?) du côté du client parce que du côté du serveur on va envoyer la matrice ligne par ligne. Recommendation du prof : ReadString("\n"), comme ca on peut remplir le fichier en même temps qu'on lit. 
+// Creer une vraie matriceR aussi
