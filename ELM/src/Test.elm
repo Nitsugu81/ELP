@@ -23,7 +23,7 @@ type Model
   = Failure
   | Loading
   | Success (List Word)
-  | WordMatch String (List Word)
+
 
 type alias Word =
     { word : String
@@ -57,7 +57,7 @@ update msg model =
         GotWord (Err error) ->
             (Failure, Cmd.none)
         CheckWord entered ->
-            (WordMatch entered words, Cmd.none)
+            (model, Cmd.none)
 
 -- SUBSCRIPTIONS
 
@@ -90,7 +90,6 @@ viewWord model =
 
     Success words ->
         div [] (List.map viewWordMeaning words)
-    _ -> text ""
 
 viewWordMeaning : Word -> Html Msg
 viewWordMeaning word =
@@ -112,15 +111,14 @@ viewDefinition def =
 viewWordMatch : Model -> Html Msg
 viewWordMatch model =
   case model of
-    WordMatch entered words ->
+    Success words ->
         case words of
             word::_ ->
-                case (word.word == entered) of
+                case (word.word == enteredWord) of
                     True -> text "You found the word!"
-                    False -> text "Try again!"
+                    False -> text "Pute"
             _ -> text ""
-    _ -> text
-
+    _ -> text ""
 
 enteredWord : String
 enteredWord = ""
