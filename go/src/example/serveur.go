@@ -164,7 +164,8 @@ func main() {
             fmt.Print("matrice encodee : ", matrice_encodee)
             fmt.Println(" de type : ", reflect.TypeOf(matrice_encodee))
             
-            conn.Write([]byte(matrice_encodee))
+            conn.Write((matrice_encodee))
+            conn.Write([]byte("..."))
             conn.Close()
         }(conn)
     }
