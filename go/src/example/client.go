@@ -8,6 +8,7 @@ import (
     "fmt"
     "strings"
     "bufio"
+    "strconv"
 
 )
 
@@ -21,37 +22,35 @@ func main() {
 
         //PARTIE LECTURE FICHIER//    
 
-        //Lecture de MatriceA
+        //Ouverture MatriceA
         file1, err := os.Open("MatriceA")
         if err != nil {
                 panic(err)
         }
         defer file1.Close()
 
-        //Lecture de MatriceB
+        //Ouverture MatriceB
         file2, err := os.Open("MatriceB")
         if err != nil {
                 panic(err)
         }
         defer file2.Close()
 
-        // Read the file into a byte slice
+        // Lecture MatriceA
         matriceA, err := ioutil.ReadAll(file1)
         if err != nil {
                 panic(err)
         }
+        matriceA_lignes := strings.Split(string(matriceA),"\n")
+        nb_lignes_matrice1 := (len(matriceA_lignes))
 
-        // Print the contents of the file
-        //fmt.Println(string(matriceA))
-
-        // Read the file into a byte slice
+        // Lecture MatriceB
         matriceB, err := ioutil.ReadAll(file2)
         if err != nil {
                 panic(err)
         }
-
-        // Print the contents of the file
-        //fmt.Println(string(matriceB))
+        matriceB_lignes := strings.Split(string(matriceB),"\n")
+        nb_colonnes_matrice2  := (len(strings.Split(matriceB_lignes[0], " ")))
 
         matrices := string(matriceA) + "/////" + string(matriceB)
 
@@ -80,6 +79,11 @@ func main() {
         //PARTIE RECEP DES DONNEES ENVOYEES PAR LE SERVEUR
 
         reader := bufio.NewReader(conn)
+        matriceR := make([][]int, nb_lignes_matrice1)
+            for i := 0; i < nb_lignes_matrice1; i++ {
+                matriceR[i] = make([]int, nb_colonnes_matrice2)
+            }
+        compteur := 0
         if err != nil {
                 panic(err)
         }
@@ -90,10 +94,22 @@ func main() {
         defer file.Close()
         for {
                 line, err := reader.ReadString('\n')
+                if strings.Contains(line,"Il faut autant de colonnes pour la matriceA que de lignes pour la matriceB\n"){
+                        fmt.Println(line)
+                        break
+                }
+                ligne_matrice := strings.Split(line," ")
                 if strings.Contains(line, "..."){
                         break
                 }
-                fmt.Print(line)
+                for i,v := range ligne_matrice{ //Utilse si jamais on veut avoir la matrice R dans une variable et pas que dans un fichier text. (si jamais le client veut la remanipuler sans passer par lecture de fichier)
+                        if i != len(ligne_matrice) -1{
+                                matriceR[compteur][i],_ = strconv.Atoi(v)
+                        }else{
+                                matriceR[compteur][i],_ = strconv.Atoi(strings.Split(v,"\n")[0])
+                        }                      
+                }
+                compteur ++ 
                 if err != nil {
                         if err == io.EOF {
                                 break
@@ -104,31 +120,14 @@ func main() {
                 if err != nil {
                         panic(err)
                 }
-
         }
-        //var matriceR [][]int64         
- 
-        //Mettre la réponse dans un fichier text
 
-        /*file, err := os.Create("matriceR")
-        if err != nil {
-                panic(err)
-        }
-        defer file.Close()*/
-
-        // Write the matrix contents to the file
-        /*for i := range matriceR {
+        fmt.Println("Matrice R : ")
+        for i := range matriceR {
                 for j := range matriceR[i] {
-                        _, err := file.WriteString(fmt.Sprintf("%d ", matriceR[i][j]))
-                        if err != nil {
-                                panic(err)
-                        }
+                    fmt.Printf("%d ",matriceR[i][j])
                 }
-                _, err := file.WriteString("\n")
-                if err != nil {
-                panic(err)
-                }
-        }*/
+                fmt.Println()
+            }
+ 
 }
-// Utiliser flush à la fin de chaque envoie pour pas que tcp attente
-// Creer une vraie matriceR aussi

@@ -137,7 +137,7 @@ func main() {
                     if j != len(matriceR[i]) - 1{
                         conn.Write([]byte(" "))
                     }
-                } 
+                }
                 conn.Write([]byte("\n"))
             }
             conn.Write([]byte("...\n"))
