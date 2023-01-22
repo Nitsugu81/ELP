@@ -6,6 +6,7 @@ import Html.Attributes exposing (style, value, type_)
 import Html.Events exposing (..)
 import Http
 import Json.Decode exposing (Decoder, map2, list, field, string)
+import Random
 
 -- MAIN
 
@@ -23,7 +24,7 @@ type Model
   = Failure
   | Loading
   | Success (List Word)
-
+  | RandomWordModel String
 
 type alias Word =
     { word : String
@@ -41,23 +42,35 @@ type alias Definition =
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  (Loading, getWord)
+  ( Loading, Http.get
+      { url = "http://localhost:8000/thousand_words.txt"
+      , expect = Http.expectString GotWords
+      }
+  )
 
 -- UPDATE
 
 type Msg
-  = GotWord (Result Http.Error (List Word))
-  | CheckWord String
+  = GotWords (Result Http.Error String)
+  | GotWord (Result Http.Error (List Word))
+  | RandomWordInt Int
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
+        GotWords (Ok words) ->
+            let 
+                randomIndex = Random.int 0 (List.length (String.words words) - 1)
+                word = List.head (List.drop randomIndex (String.words words))
+            in 
+                ( Loading, Http.get {url = ("https://api.dictionaryapi.dev/api/v2/entries/en/" ++ word)  , expect = Http.expectJson GotWord descriptionDecoder})
+        GotWords (Err _) ->
+            (Failure, Cmd.none)
         GotWord (Ok words) ->
             (Success words, Cmd.none)
-        GotWord (Err error) ->
+        GotWord (Err _) ->
             (Failure, Cmd.none)
-        CheckWord entered ->
-            (model, Cmd.none)
+
 
 -- SUBSCRIPTIONS
 
@@ -72,9 +85,8 @@ view model =
   div []
     [ h2 [] [ text "Word Definitions" ]
     , viewWord model
-    , input [ type_ "text", onInput CheckWord] []
+    , button [ onClick RandomWordInt ] [ text "New Word" ]
     ]
-
 
 
 viewWord : Model -> Html Msg
@@ -82,13 +94,15 @@ viewWord model =
   case model of
     Failure ->
       div []
-        [ text "I could not load the word for some reason. "        ]
+        [ text "I could not load the word for some reason. " ]
 
     Loading ->
       text "Loading..."
 
     Success words ->
         div [] (List.map viewWordMeaning words)
+    RandomWordModel word ->
+        div [] [ text "Loading new word : " ++ word ]
 
 viewWordMeaning : Word -> Html Msg
 viewWordMeaning word =
@@ -107,8 +121,7 @@ viewDefinition : Definition -> Html Msg
 viewDefinition def =
     li [] [ text def.definition ]
 
-
--- HTTP
+    -- HTTP
 
 getWord : Cmd Msg
 getWord =
@@ -137,3 +150,4 @@ definitionDecoder : Decoder Definition
 definitionDecoder =
     Json.Decode.map Definition
         (field "definition" string)
+
