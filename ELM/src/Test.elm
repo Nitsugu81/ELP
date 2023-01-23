@@ -7,6 +7,7 @@ import Html.Events exposing (onInput)
 import Http
 import Json.Decode exposing (Decoder, map2, list, field, string)
 
+
 -- MAIN
 main =
   Browser.element
@@ -21,7 +22,8 @@ type Model
   = Failure
   | Loading
   | Success (List Word)
-    { enteredWord : String }
+  | WordEntered String
+
 
 type alias Word =
     { word : String
@@ -43,17 +45,18 @@ init _ =
 -- UPDATE
 type Msg
   = GotWord (Result Http.Error (List Word))
-  | CheckWord String
+  | ChangeWord String
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
         GotWord (Ok words) ->
-            (Success { words = words, enteredWord = model.enteredWord }, Cmd.none)
+            (Success words, Cmd.none)
         GotWord (Err error) ->
             (Failure, Cmd.none)
-        CheckWord entered ->
-            (Success { words = model.words, enteredWord = entered }, Cmd.none)
+        ChangeWord newWord ->
+            (WordEntered newWord, Cmd.none)
+
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Sub Msg
@@ -65,27 +68,22 @@ view : Model -> Html Msg
 view model =
   div []
     [ h2 [] [ text "Word Definitions" ]
-    , input [ type_ "text", onInput CheckWord] []
     , viewWord model
+    , input [value model.content, onInput ChangeWord ][]
+    , div [] [ text (model.content) ]
     ]
 
 viewWord : Model -> Html Msg
 viewWord model =
   case model of
     Failure ->
-      div []
-        [ text "I could not load the word for some reason. "        ]
+      div [] [text "I could not load the word for some reason."]
     Loading ->
       text "Loading..."
-    Success { words, enteredWord }->
+    Success words ->
         div [] (List.map viewWordMeaning words)
-    Success { enteredWord } ->
-        case words of
-            word::_ ->
-                case (word.word == enteredWord) of
-                    True -> text "You found the word!"
-                    False -> text "Not found"
-            _ -> text ""
+    WordEntered newContent ->
+      div [] [ text newContent ]
 
 viewWordMeaning : Word -> Html Msg
 viewWordMeaning word =
@@ -105,13 +103,13 @@ viewDefinition def =
     li [] [ text def.definition ]
 
 -- HTTP
-
 getWord : Cmd Msg
 getWord =
     Http.get
     { url = "https://api.dictionaryapi.dev/api/v2/entries/en/hello"
     , expect = Http.expectJson GotWord descriptionDecoder
     }
+
 --Decoder
 descriptionDecoder : Decoder (List Word)
 descriptionDecoder = Json.Decode.list wordDecoder
