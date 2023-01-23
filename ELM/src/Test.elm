@@ -22,7 +22,6 @@ type Model
   = Failure
   | Loading
   | Success (List Word)
-  | WordEntered String
 
 
 type alias Word =
@@ -45,7 +44,6 @@ init _ =
 -- UPDATE
 type Msg
   = GotWord (Result Http.Error (List Word))
-  | ChangeWord String
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -54,8 +52,6 @@ update msg model =
             (Success words, Cmd.none)
         GotWord (Err error) ->
             (Failure, Cmd.none)
-        ChangeWord newWord ->
-            (WordEntered newWord, Cmd.none)
 
 
 -- SUBSCRIPTIONS
@@ -69,9 +65,8 @@ view model =
   div []
     [ h2 [] [ text "Word Definitions" ]
     , viewWord model
-    , input [value model.content, onInput ChangeWord ][]
-    , div [] [ text (model.content) ]
     ]
+        
 
 viewWord : Model -> Html Msg
 viewWord model =
@@ -82,8 +77,7 @@ viewWord model =
       text "Loading..."
     Success words ->
         div [] (List.map viewWordMeaning words)
-    WordEntered newContent ->
-      div [] [ text newContent ]
+
 
 viewWordMeaning : Word -> Html Msg
 viewWordMeaning word =
