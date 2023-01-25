@@ -1,12 +1,13 @@
 module Test exposing (..)
 
 import Browser
-import Html exposing (..)
-import Html.Attributes exposing (value)
-import Html.Events exposing (onInput)
 import Http
+import Html as H exposing (Html)
+import Html exposing (..)
+import Html.Events exposing (onClick)
+import Random
+import Task
 import Json.Decode exposing (Decoder, map2, list, field, string)
-
 
 -- MAIN
 main =
@@ -18,11 +19,13 @@ main =
     }
 
 -- MODEL
-type Model
+type R
   = Failure
   | Loading
-  | Success (List Word)
+  | Success (String, List Word)
 
+type alias Model =
+   {mot: String, items:List String, sucess:R}
 
 type alias Word =
     { word : String
@@ -38,21 +41,49 @@ type alias Definition =
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  (Loading, getWord)
-
+  ( Model "" [] Loading 
+  , Http.get
+      { url = "http://localhost:8000/src/mots"
+      , expect = Http.expectString GotText
+      }
+  )
 
 -- UPDATE
 type Msg
-  = GotWord (Result Http.Error (List Word))
+  = GotText (Result Http.Error String)
+  | GotWord (Result Http.Error (List Word))
+  | Num Int
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-    case msg of
-        GotWord (Ok words) ->
-            (Success words, Cmd.none)
-        GotWord (Err error) ->
-            (Failure, Cmd.none)
+  case msg of
+    GotText result ->
+      case result of
+        Ok fullText ->
+          let
+            items = String.split " " fullText
+          in
+          ( { model | items = items }
+          , Random.generate Num (Random.int 1 1000) )
 
+        Err _ ->
+          ({model|sucess=Failure}, Cmd.none)
+    Num num ->  
+      let
+        mot = Maybe.withDefault "" (List.head (List.drop num model.items))
+      in
+      ( { model | mot = mot }
+      , Http.get
+          { url = "https://api.dictionaryapi.dev/api/v2/entries/en/" ++ mot
+          , expect = Http.expectJson GotWord descriptionDecoder
+          }
+      )
+    GotWord result ->
+        case result of
+          Ok wordList ->
+              ({model | sucess = Success (model.mot, wordList)}, Cmd.none)
+          Err _ ->
+              ({model | sucess = Failure }, Cmd.none)
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Sub Msg
@@ -62,22 +93,18 @@ subscriptions model =
 -- VIEW
 view : Model -> Html Msg
 view model =
-  div []
-    [ h2 [] [ text "Word Definitions" ]
-    , viewWord model
-    ]
-        
-
-viewWord : Model -> Html Msg
-viewWord model =
-  case model of
+  case model.sucess of
     Failure ->
-      div [] [text "I could not load the word for some reason."]
+      text "I was unable to load the word or its definition."
+
     Loading ->
       text "Loading..."
-    Success words ->
-        div [] (List.map viewWordMeaning words)
 
+    Success (mot, words) ->
+       div [] [
+         text ("Word: " ++ mot),
+         div [] (List.map viewWordMeaning words)
+       ]
 
 viewWordMeaning : Word -> Html Msg
 viewWordMeaning word =
@@ -96,27 +123,22 @@ viewDefinition : Definition -> Html Msg
 viewDefinition def =
     li [] [ text def.definition ]
 
--- HTTP
-getWord : Cmd Msg
-getWord =
-    Http.get
-    { url = "https://api.dictionaryapi.dev/api/v2/entries/en/hello"
-    , expect = Http.expectJson GotWord descriptionDecoder
-    }
-
---Decoder
+-- Decoders
 descriptionDecoder : Decoder (List Word)
 descriptionDecoder = Json.Decode.list wordDecoder
+
 wordDecoder : Decoder Word
 wordDecoder =
     map2 Word
         (field "word" string)
         (field "meanings" (Json.Decode.list meaningDecoder))
+
 meaningDecoder : Decoder Meaning
 meaningDecoder =
     map2 Meaning
         (field "partOfSpeech" string)
         (field "definitions" (Json.Decode.list definitionDecoder))
+
 definitionDecoder : Decoder Definition
 definitionDecoder =
     Json.Decode.map Definition
