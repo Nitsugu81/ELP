@@ -26,8 +26,11 @@ type R
   | Loading
   | Success (String, List Word)
 
+
+-- MODEL
 type alias Model =
-   {mot: String, items:List String, sucess:R}
+   {mot: String, items:List String, sucess:R, guess: String}
+
 
 type alias Word =
     { word : String
@@ -41,9 +44,11 @@ type alias Definition =
     { definition : String
     }
 
+
+-- INIT
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model "" [] Loading 
+  ( Model "" [] Loading ""
   , Http.get
       { url = "http://localhost:8000/src/mots"
       , expect = Http.expectString GotText
@@ -56,6 +61,7 @@ type Msg
   | GotWord (Result Http.Error (List Word))
   | Num Int
   | Reload
+  | Guess String
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -89,13 +95,18 @@ update msg model =
               ({model | sucess = Failure }, Cmd.none)
     Reload ->
       init()
+    Guess guess ->
+        if guess == model.mot then
+            ({model | guess = "You found the word!"}, Cmd.none)
+        else
+            ({model | guess = guess}, Cmd.none)
+
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.none
 
--- VIEW
 view : Model -> Html Msg
 view model =
   case model.sucess of
@@ -109,6 +120,8 @@ view model =
        div [] [
          text ("Guess the word : " ++ mot),
          div [] (List.map viewWordMeaning words),
+         input [ onInput Guess, value model.guess ] [],
+         text model.guess,
          button [ onClick Reload ] [ text "Reload" ]
        ]
 
