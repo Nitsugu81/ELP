@@ -121,7 +121,6 @@ view model =
          text ("Guess the word : " ++ mot),
          div [] (List.map viewWordMeaning words),
          input [ onInput Guess, value model.guess ] [],
-         text model.guess,
          button [ onClick Reload ] [ text "Reload" ]
        ]
 
