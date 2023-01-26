@@ -8,6 +8,8 @@ import Html.Events exposing (onClick)
 import Random
 import Task
 import Json.Decode exposing (Decoder, map2, list, field, string)
+import Html.Attributes exposing (value)
+import Html.Events exposing (onInput)
 
 -- MAIN
 main =
@@ -53,6 +55,7 @@ type Msg
   = GotText (Result Http.Error String)
   | GotWord (Result Http.Error (List Word))
   | Num Int
+  | Reload
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -84,6 +87,8 @@ update msg model =
               ({model | sucess = Success (model.mot, wordList)}, Cmd.none)
           Err _ ->
               ({model | sucess = Failure }, Cmd.none)
+    Reload ->
+      init()
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Sub Msg
@@ -102,8 +107,9 @@ view model =
 
     Success (mot, words) ->
        div [] [
-         text ("Word: " ++ mot),
-         div [] (List.map viewWordMeaning words)
+         text ("Guess the word : " ++ mot),
+         div [] (List.map viewWordMeaning words),
+         button [ onClick Reload ] [ text "Reload" ]
        ]
 
 viewWordMeaning : Word -> Html Msg
