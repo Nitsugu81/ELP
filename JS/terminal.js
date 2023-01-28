@@ -3,12 +3,10 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import figlet from 'figlet';
 import clear from'clear';
-import { exec, spawn } from 'node:child_process';
+import { exec } from 'node:child_process';
 import psList from 'ps-list';
 import readline from 'readline';
 import shell from 'shelljs';
-
-
 
 
 //CLI
@@ -33,25 +31,31 @@ async function getCommand() {
 
 //Méthode choix commande
 async function chooseCommand(c) {
+    
     switch (c[0]) {
         case 'exec' :
-            
-            exec(`${process.cwd()}`+"/"+c[1], (err, stdout, stderr) => {
-                console.log(stdout);
-                if (err) {
-                    console.error(`exec error: ${err}`);
-                    return;
-                }
-            })
-            break;
-        case '!' :
+            //:`${process.cwd()}`+ "/" +
+            if (c[2] == '!'){
+                exec(c[1] + " &", (err, stdout, stderr) => { //En chemin absolu
 
-            exec(`${process.cwd()}`+c[1] + " &", (err, stdout, stderr) => {
+                    console.log(stdout)
+                    if (err) {
+                        console.error(`exec error: ${err}`);
+                        return;
+                    }
+                });
+            }
+
+            else{
+                exec(c[1], (err, stdout, stderr) => {
                 if (err) {
                     console.error(`exec error: ${err}`);
                     return;
                 }
-            });
+                console.log(stdout)
+            })}
+            break;
+
         case 'cd' :
             cd(c[1])
             break;
@@ -59,7 +63,7 @@ async function chooseCommand(c) {
             let liste = (await psList())
             for (let i = 0; i < liste.length; i++) {
                 console.log(liste[i].pid + ' ' + liste[i].name);
-            } 
+            }
             //console.log(await psList());
             break;
         case 'end' :
@@ -107,14 +111,13 @@ async function chooseCommand(c) {
 
         case 'help' :
             console.log("cd <rep> : permet de naviguer dans les fichier");
-            console.log("ls : affiche ce qui est contenu dans le répertoire courant");
             console.log("clear : nettoie le terminal");
             console.log("lp : affiche les processus en cours");
             console.log("mv <fichier> <rep> : change le fichier de répertoire");
             console.log("crt+P : ferme le terminal");
             console.log("bing <-k|-c|-p> : Tue|Relance|Met en pause un process");
-            console.log("exec <programme> : l'exécute");
-            console.log("! <programme> : le lance en fond")
+            console.log("exec <programme> : l'exécute avec un chemin absolu");
+            console.log("exec <programme> ! : le lance en fond")
             break;
         default :
             console.log("La commande n'est pas reconnue");
@@ -145,7 +148,7 @@ function ctrl_P(){
     if (process.stdin.isTTY) process.stdin.setRawMode(true);
     process.stdin.on("keypress", (str, key) => {
     if(key.ctrl && key.name == "p") process.exit()
-    }) 
+    })
 }
 
 
