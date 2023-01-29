@@ -1,0 +1,11 @@
+Côté serveur : go run serveur.go 
+Côté client : go run client.go 127.0.0.1:8888
+
+Format des matrices : 
+Un espace entre chaque nombre mais PAS D'ESPACE après le dernier nombre (sinon l'espace sera considéré comme un 0 dans la matrice, et vous aurez le message : "Il faut autant de colonnes pour la matriceA que de lignes pour la matriceB")
+Un retour à la ligne à la fin de la matrice B avec "..." rajouté
+
+Exemple pour matrice B:
+1 2 3
+4 5 6
+...
