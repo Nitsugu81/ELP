@@ -23,10 +23,10 @@ func main() {
 
 	//Ouverture MatriceA
 	file1, err := os.Open("MatriceA")
-	if err != nil {
-		panic(err)
+	if err != nil {		//capture les erreurs
+		panic(err)	//si une erreur alors panic <=> interromp le programme et affiche l'erreur
 	}
-	defer file1.Close()
+	defer file1.Close() //defer = sert à exécuter 
 
 	//Ouverture MatriceB
 	file2, err := os.Open("MatriceB")
@@ -40,8 +40,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	matriceA_lignes := strings.Split(string(matriceA), "\n")
-	nb_lignes_matrice1 := (len(matriceA_lignes))
+	matriceA_lignes := strings.Split(string(matriceA), "\n") //on sépare ligne à ligne la matrice et on sotcke les éléments dans une liste de string
+	nb_lignes_matrice1 := (len(matriceA_lignes)) //la taille de la liste est donc le nombre de ligne
 
 	// Lecture MatriceB
 	matriceB, err := ioutil.ReadAll(file2)
@@ -54,19 +54,22 @@ func main() {
 	matrices := string(matriceA) + "/////" + string(matriceB)
 
 	//PARTIE ENVOI AU SERVEUR//
-
+	
+	//la fonction crée un connection de type TCP sur l'host et le port voulu
 	tcpServer, err := net.ResolveTCPAddr(TYPE, HOST+":"+PORT)
 	if err != nil {
 		println("ResolveTCPAddr failed:", err.Error())
 		os.Exit(1)
 	}
-
+	
+	//la fonction permet d'établir la connexion avec le serveur
 	conn, err := net.DialTCP(TYPE, nil, tcpServer) //nil represente l'adresse locale
 	if err != nil {
 		println("Dial failed:", err.Error())
 		os.Exit(1)
 	}
-
+	
+	//writer sert à encoder les donner à envoyer et à les stocker dans un buffer
 	writer := bufio.NewWriter(conn) // Utilisation de bufio pour pouvoir utiliser flush
 	_, err = writer.Write([]byte(matrices))
 	if err != nil {
@@ -97,7 +100,7 @@ func main() {
 			fmt.Println(line)
 			break
 		}
-		ligne_matrice := strings.Split(line, " ")
+		ligne_matrice := strings.Split(line, " ") //stocke les valeurs de la ligne dans une liste
 		if strings.Contains(line, "...") {
 			break
 		}
@@ -120,7 +123,8 @@ func main() {
 			panic(err)
 		}
 	}
-
+	
+	//affiche le résultat de la multiplication
 	fmt.Println("Matrice R : ")
 	for i := range matriceR {
 		for j := range matriceR[i] {
