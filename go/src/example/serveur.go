@@ -32,7 +32,7 @@ func main() {
 			panic(err)
 		}
 		go func(conn net.Conn) {
-
+			//buffer dynamique dont la taille augmente pour pouvoir lire les données en optimisant la taille du buffer
 			buf := bytes.NewBuffer(nil)
 			delimiter := []byte("...")
 			for {
@@ -50,6 +50,7 @@ func main() {
 					break
 				}
 			}
+			//on recrée les matrices à partir des données récupérées
 			matrices := buf.String()
 			matrices_slices := strings.Split(matrices, "/////")
 			matriceA := matrices_slices[0]
@@ -75,7 +76,8 @@ func main() {
 			for i := 0; i < nb_lignes_matrice1; i++ {
 				matriceR[i] = make([]int, nb_colonnes_matrice2)
 			}
-
+			
+			//vérification que la multiplication est possible
 			if nb_colonnes_matrice1 != nb_lignes_matrice2 {
 				conn.Write([]byte("Il faut autant de colonnes pour la matriceA que de lignes pour la matriceB\n"))
 				conn.Close()
@@ -110,7 +112,8 @@ func main() {
 				}
 
 			}
-
+			
+			//Affiche les matrices reçues
 			fmt.Println("\nMatrice A : ")
 
 			for i := range matrice1 {
@@ -136,7 +139,8 @@ func main() {
 				}
 				fmt.Println()
 			}
-
+			
+			//création d'un wait groupe pour faire les calculs ligne par ligne
 			var wg sync.WaitGroup
 			for i := range matrice1 {
 				wg.Add(1)
